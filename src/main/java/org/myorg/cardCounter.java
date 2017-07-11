@@ -6,54 +6,58 @@ import java.util.*;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.*;
 
 /**
  * Created by rore256 on 7/11/2017.
  */
 public class cardCounter {
-    public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {
+    public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
         private final static IntWritable one = new IntWritable(1);
-        private Text word = new Text();
 
-        public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
-            String line = value.toString();
-                StringTokenizer tokenizer = new StringTokenizer(line);
-                while (tokenizer.hasMoreTokens()) {
-                word.set(tokenizer.nextToken());
-                output.collect(word, one);
-            }
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            context.write(new Text("t"),one);
         }
     }
 
-    public class Reduce extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
-        public void reduce(Text key, Iterator<IntWritable> values, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
+
+    public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
+        private IntWritable result = new IntWritable();
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             int sum = 0;
-            while (values.hasNext()) {
-                sum += values.next().get();
+            for (IntWritable val : values) {
+                sum += val.get();
             }
-            output.collect(key, new IntWritable(sum));
+            result.set(sum);
+            context.write(key, result);
         }
     }
 
-    public static void main(String [] args) throws Exception {
-        JobConf conf = new JobConf(cardCounter.class);
-        conf.setJobName("wordcount");
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        Job job = new Job(conf);
+        job.setJarByClass(cardCounter.class);
+        job.setJobName("cardCount");
 
-        conf.setOutputKeyClass(Text.class);
-        conf.setOutputValueClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
-        conf.setMapperClass(Map.class);
-        conf.setCombinerClass(Reduce.class);
-        conf.setReducerClass(Reduce.class);
+        job.setMapperClass(Map.class);
+        job.setReducerClass(Reduce.class);
 
-        conf.setInputFormat(TextInputFormat.class);
-        conf.setOutputFormat(TextOutputFormat.class);
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
 
-        FileInputFormat.setInputPaths(conf, new Path(args[0]));
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-
-        JobClient.runJob(conf);
+        job.waitForCompletion(true);
     }
 }

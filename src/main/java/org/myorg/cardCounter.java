@@ -1,3 +1,5 @@
+package org.myorg;
+
 import java.io.*;
 import java.util.*;
 
@@ -17,10 +19,10 @@ public class cardCounter {
 
         public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
             String line = value.toString();
-            StringTokenizer tokenizer = new StringTokenizer(line);
-            while (tokenizer.hasMoreTokens()) {
+                StringTokenizer tokenizer = new StringTokenizer(line);
+                while (tokenizer.hasMoreTokens()) {
                 word.set(tokenizer.nextToken());
-                output.collect(word.one);
+                output.collect(word, one);
             }
         }
     }
@@ -50,7 +52,7 @@ public class cardCounter {
         conf.setOutputFormat(TextOutputFormat.class);
 
         FileInputFormat.setInputPaths(conf, new Path(args[0]));
-        FileInputFormat.setOutputPaths(conf, new Path(args[1]));
+
 
         JobClient.runJob(conf);
     }

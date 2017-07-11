@@ -17,7 +17,7 @@ import org.apache.hadoop.util.*;
 
 /**
  * Created by rore256 on 7/11/2017.
- *
+ * Counts total unique visitors by hash value
  */
 public class cardCounter {
     public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {

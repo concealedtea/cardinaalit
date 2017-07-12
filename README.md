@@ -8,3 +8,6 @@ etc.
 Final Result: 
 unique visitors to site is 84646983
 
+Edit 2: 
+Final Result now prints number of each type of device. Ex. iphone6 6, android 5, etc.
+

@@ -18,13 +18,19 @@ import org.apache.hadoop.util.*;
 /**
  * Created by rore256 on 7/11/2017.
  * Counts total unique visitors by hash value
+ * Counts number of each mobile device.
+ * Ex. iphone 256
+ * android 234
+ * iphone6 23
+ * iphone5 12
  */
 public class cardCounter {
     public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
         private final static IntWritable one = new IntWritable(1);
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            context.write(new Text("t"),one);
+            String [] ids = value.toString().split("\\|");
+            context.write(new Text(ids[2]),one);
         }
     }
 
